@@ -5,10 +5,13 @@ open Js.Global;
 [@mel.set]
 external setFillStyleString: (Canvas.Canvas2d.t, String.t) => unit =
   "fillStyle";
-
+type brickStatus =
+  | Visible
+  | Hidden;
 type brick = {
   x: int,
   y: int,
+  mutable status: brickStatus,
 };
 let canvas = Document.getElementById("myCanvas", Dom.document) |> Option.get;
 let ctx = Canvas.CanvasElement.getContext2d(canvas);
@@ -45,6 +48,7 @@ let bricks =
     {
       x: c * (brickWidth + brickPadding) + brickOffsetLeft,
       y: r * (brickHeight + brickPadding) + brickOffsetTop,
+      status: Visible,
     }
   });
 
@@ -53,17 +57,19 @@ let drawBricks = () => {
     for (r in 0 to brickRowCount - 1) {
       for (c in 0 to brickColumnCount - 1) {
         let brick = bricks[r][c];
-        ctx |> beginPath;
-        ctx
-        |> rect(
-             ~x=brick.x |> float,
-             ~y=brick.y |> float,
-             ~w=brickWidth |> float,
-             ~h=brickHeight |> float,
-           );
-        ctx->setFillStyleString("#0095DD");
-        ctx |> fill;
-        ctx |> closePath;
+        if (brick.status === Visible) {
+          ctx |> beginPath;
+          ctx
+          |> rect(
+               ~x=brick.x |> float,
+               ~y=brick.y |> float,
+               ~w=brickWidth |> float,
+               ~h=brickHeight |> float,
+             );
+          ctx->setFillStyleString("#0095DD");
+          ctx |> fill;
+          ctx |> closePath;
+        };
       };
     }
   );
@@ -124,6 +130,24 @@ let keyUpHandler = e => {
 
 document |> Document.addKeyDownEventListener(keyDownHandler);
 document |> Document.addKeyUpEventListener(keyUpHandler);
+
+let collisionDetection = () => {
+  for (r in 0 to brickRowCount - 1) {
+    for (c in 0 to brickColumnCount - 1) {
+      let b = bricks[r][c];
+      if (b.status === Visible
+          && x^ > b.x
+          && x^ < b.x
+          + brickWidth
+          && y^ > b.y
+          && y^ < b.y
+          + brickHeight) {
+        dy := - dy^;
+        b.status = Hidden;
+      };
+    };
+  };
+};
 let draw = () => {
   ctx
   |> Canvas.Canvas2d.clearRect(
@@ -135,6 +159,7 @@ let draw = () => {
 
   drawBall();
   drawPaddle();
+  collisionDetection();
   drawBricks();
 
   x := x^ + dx^;
