@@ -43,6 +43,8 @@ let brickPadding = 10;
 let brickOffsetTop = 30;
 let brickOffsetLeft = 30;
 
+let score = ref(0);
+
 let bricks =
   Array.init_matrix(brickRowCount, brickColumnCount, (r, c) => {
     {
@@ -73,6 +75,13 @@ let drawBricks = () => {
       };
     }
   );
+};
+
+let drawScore = () => {
+  open Canvas.Canvas2d;
+  ctx->font("16px Arial");
+  ctx->setFillStyleString("#0095DD");
+  ctx |> fillText("Score " ++ (score^ |> string_of_int), ~x=8.0, ~y=20.0);
 };
 
 let drawBall = () => {
@@ -144,6 +153,18 @@ let collisionDetection = () => {
           + brickHeight) {
         dy := - dy^;
         b.status = Hidden;
+        score := score^ + 1;
+        if (score^ === brickColumnCount * brickRowCount) {
+          Window.alert("YOU WIN, CONGRATULATIONS!", window);
+          document
+          |> Dom.Document.unsafeAsHtmlDocument
+          |> Dom.HtmlDocument.location
+          |> Location.reload;
+          switch (interval^) {
+          | Some(intervalId) => clearInterval(intervalId)
+          | None => ()
+          };
+        };
       };
     };
   };
@@ -161,6 +182,7 @@ let draw = () => {
   drawPaddle();
   collisionDetection();
   drawBricks();
+  drawScore();
 
   x := x^ + dx^;
   y := y^ + dy^;
