@@ -6,11 +6,21 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <script type="module" src="bundle.js"></script>
     <style>
-     html, body { height: 100%; }
-     canvas { height: 100%; width: 100%; margin: auto; }
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        background: #eee;
+      }
+      button {
+  display: block;
+}
     </style>
   </head>
   <body>
-    <canvas id="canvas"></canvas>
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+    <button id="runButton">Start game</button>
+
   </body>
 </html>
