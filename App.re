@@ -44,6 +44,7 @@ let brickOffsetTop = 30;
 let brickOffsetLeft = 30;
 
 let score = ref(0);
+let lives = ref(3);
 
 let bricks =
   Array.init_matrix(brickRowCount, brickColumnCount, (r, c) => {
@@ -82,6 +83,17 @@ let drawScore = () => {
   ctx->font("16px Arial");
   ctx->setFillStyleString("#0095DD");
   ctx |> fillText("Score " ++ (score^ |> string_of_int), ~x=8.0, ~y=20.0);
+};
+let drawLives = () => {
+  open Canvas.Canvas2d;
+  ctx->font("16px Arial");
+  ctx->setFillStyleString("#0095DD");
+  ctx
+  |> fillText(
+       "Lives: " ++ (lives^ |> string_of_int),
+       ~x=canvas_width - 65 |> float,
+       ~y=20.0,
+     );
 };
 
 let drawBall = () => {
@@ -183,7 +195,7 @@ let collisionDetection = () => {
     };
   };
 };
-let draw = () => {
+let rec draw = () => {
   ctx
   |> Canvas.Canvas2d.clearRect(
        ~x=0.0,
@@ -197,6 +209,7 @@ let draw = () => {
   collisionDetection();
   drawBricks();
   drawScore();
+  drawLives();
 
   x := x^ + dx^;
   y := y^ + dy^;
@@ -209,7 +222,7 @@ let draw = () => {
   } else if (y^ + dy^ > canvas_height - ballRadius) {
     if (x^ > paddleX^ && x^ < paddleX^ + paddleWidth) {
       dy := - dy^;
-    } else {
+    } else if (lives^ == 0) {
       window |> Window.alert("GAME OVER");
 
       document
@@ -220,6 +233,13 @@ let draw = () => {
       | Some(intervalId) => clearInterval(intervalId)
       | None => ()
       };
+    } else {
+      x := canvas_width / 2;
+      y := canvas_height - 30;
+      dx := 2;
+      dy := (-2);
+      paddleX := (canvas_width - paddleWidth) / 2;
+      ();
     };
   };
 
@@ -228,18 +248,14 @@ let draw = () => {
   } else if (leftPressed^) {
     paddleX := Js.Math.max_int(paddleX^ - 7, 0);
   };
-};
-
-let startGame = () => {
-  interval := Some(setInterval(~f=draw, 10));
-  ();
+  requestAnimationFrame(_ => draw());
 };
 
 switch (Dom.Document.getElementById("runButton", Dom.document)) {
 | Some(button) =>
   button
   |> Dom.Element.addClickEventListener(_ => {
-       startGame();
+       requestAnimationFrame(_ => draw());
        button |> Dom.Element.setAttribute("disabled", "true");
      })
 | None => ()
