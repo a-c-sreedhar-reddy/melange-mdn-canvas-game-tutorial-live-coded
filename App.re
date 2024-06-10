@@ -137,8 +137,22 @@ let keyUpHandler = e => {
   };
 };
 
+let mouseMoveHandler = e => {
+  let offsetLeft =
+    canvas
+    |> Dom.HtmlElement.ofElement
+    |> Option.get
+    |> Dom.HtmlElement.offsetLeft;
+  ();
+  let relativeX = (e |> MouseEvent.clientX) - offsetLeft;
+  if (relativeX > 0 && relativeX < canvas_width) {
+    paddleX := relativeX - paddleWidth / 2;
+  };
+};
+
 document |> Document.addKeyDownEventListener(keyDownHandler);
 document |> Document.addKeyUpEventListener(keyUpHandler);
+document |> Document.addMouseMoveEventListener(mouseMoveHandler);
 
 let collisionDetection = () => {
   for (r in 0 to brickRowCount - 1) {
