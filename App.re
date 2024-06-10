@@ -25,6 +25,9 @@ let paddleX = ref((canvas_width - paddleWidth) / 2);
 let rightPressed = ref(false);
 let leftPressed = ref(false);
 
+let interval: option(intervalId) = None;
+let interval: ref(option(intervalId)) = ref(interval);
+
 let drawBall = () => {
   ctx |> Canvas.Canvas2d.beginPath;
   ctx
@@ -98,9 +101,23 @@ let draw = () => {
   if (x^ + dx^ > canvas_width - ballRadius || x^ + dx^ < ballRadius) {
     dx := - dx^;
   };
-
-  if (y^ + dy^ > canvas_height - ballRadius || y^ + dy^ < ballRadius) {
+  if (y^ + dy^ < ballRadius) {
     dy := - dy^;
+  } else if (y^ + dy^ > canvas_height - ballRadius) {
+    if (x^ > paddleX^ && x^ < paddleX^ + paddleWidth) {
+      dy := - dy^;
+    } else {
+      window |> Window.alert("GAME OVER");
+
+      document
+      |> Dom.Document.unsafeAsHtmlDocument
+      |> Dom.HtmlDocument.location
+      |> Location.reload;
+      switch (interval^) {
+      | Some(intervalId) => clearInterval(intervalId)
+      | None => ()
+      };
+    };
   };
 
   if (rightPressed^) {
@@ -111,7 +128,7 @@ let draw = () => {
 };
 
 let startGame = () => {
-  let _interval = setInterval(~f=draw, 10);
+  interval := Some(setInterval(~f=draw, 10));
   ();
 };
 
