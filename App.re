@@ -6,6 +6,10 @@ open Js.Global;
 external setFillStyleString: (Canvas.Canvas2d.t, String.t) => unit =
   "fillStyle";
 
+type brick = {
+  x: int,
+  y: int,
+};
 let canvas = Document.getElementById("myCanvas", Dom.document) |> Option.get;
 let ctx = Canvas.CanvasElement.getContext2d(canvas);
 let canvas_width = canvas |> Canvas.CanvasElement.width;
@@ -27,6 +31,43 @@ let leftPressed = ref(false);
 
 let interval: option(intervalId) = None;
 let interval: ref(option(intervalId)) = ref(interval);
+
+let brickRowCount = 3;
+let brickColumnCount = 5;
+let brickWidth = 75;
+let brickHeight = 20;
+let brickPadding = 10;
+let brickOffsetTop = 30;
+let brickOffsetLeft = 30;
+
+let bricks =
+  Array.init_matrix(brickRowCount, brickColumnCount, (r, c) => {
+    {
+      x: c * (brickWidth + brickPadding) + brickOffsetLeft,
+      y: r * (brickHeight + brickPadding) + brickOffsetTop,
+    }
+  });
+
+let drawBricks = () => {
+  Canvas.Canvas2d.(
+    for (r in 0 to brickRowCount - 1) {
+      for (c in 0 to brickColumnCount - 1) {
+        let brick = bricks[r][c];
+        ctx |> beginPath;
+        ctx
+        |> rect(
+             ~x=brick.x |> float,
+             ~y=brick.y |> float,
+             ~w=brickWidth |> float,
+             ~h=brickHeight |> float,
+           );
+        ctx->setFillStyleString("#0095DD");
+        ctx |> fill;
+        ctx |> closePath;
+      };
+    }
+  );
+};
 
 let drawBall = () => {
   ctx |> Canvas.Canvas2d.beginPath;
@@ -94,6 +135,7 @@ let draw = () => {
 
   drawBall();
   drawPaddle();
+  drawBricks();
 
   x := x^ + dx^;
   y := y^ + dy^;
