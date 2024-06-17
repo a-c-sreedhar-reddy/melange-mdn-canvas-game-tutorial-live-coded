@@ -8,9 +8,16 @@ type brickStatus =
   | Visible;
 
 type brick = {
-  mutable x: int,
-  mutable y: int,
+  x: int,
+  y: int,
   mutable status: brickStatus,
+};
+
+let iterBricks = (~f, bricks) => {
+  bricks
+  |> Array.iteri((c, brickColumn) =>
+       brickColumn |> Array.iteri((r, brick) => f(~c, ~r, ~brick))
+     );
 };
 
 let ( let* ) = Option.bind;
@@ -41,8 +48,12 @@ let program = () => {
   let score = ref(0);
   let lives = ref(3);
   let bricks: array(array(brick)) =
-    Array.init_matrix(brickColumnCount, brickRowCount, (_, _) =>
-      {x: 0, y: 0, status: Visible}
+    Array.init_matrix(brickColumnCount, brickRowCount, (c, r) =>
+      {
+        x: r * (brickWidth + brickPadding) + brickOffsetLeft,
+        y: c * (brickHeight + brickPadding) + brickOffsetTop,
+        status: Visible,
+      }
     );
 
   let keyDownHandler = event => {
@@ -81,34 +92,34 @@ let program = () => {
   Document.addMouseMoveEventListener(mouseMoveHandler, document);
 
   let collisionDetection = () => {
-    for (c in 0 to brickColumnCount - 1) {
-      for (r in 0 to brickRowCount - 1) {
-        let brick = bricks[c][r];
-        switch (brick.status) {
-        | Visible =>
-          if (x^ > brick.x
-              && x^ < brick.x
-              + brickWidth
-              && y^ > brick.y
-              && y^ < brick.y
-              + brickHeight) {
-            dy := - dy^;
-            brick.status = Hidden;
-            score := score^ + 1;
+    bricks
+    |> iterBricks(~f=(~c, ~r, ~brick) => {
+         let _ = c;
+         let _ = r;
+         switch (brick.status) {
+         | Visible =>
+           if (x^ > brick.x
+               && x^ < brick.x
+               + brickWidth
+               && y^ > brick.y
+               && y^ < brick.y
+               + brickHeight) {
+             dy := - dy^;
+             brick.status = Hidden;
+             score := score^ + 1;
 
-            if (score^ === brickRowCount * brickColumnCount) {
-              Window.alert("YOU WIN, CONGRATS!", window);
-              document
-              |> Document.asHtmlDocument
-              |> Option.iter(htmlDocument =>
-                   htmlDocument |> HtmlDocument.location |> Location.reload
-                 );
-            };
-          }
-        | Hidden => ()
-        };
-      };
-    };
+             if (score^ === brickRowCount * brickColumnCount) {
+               Window.alert("YOU WIN, CONGRATS!", window);
+               document
+               |> Document.asHtmlDocument
+               |> Option.iter(htmlDocument =>
+                    htmlDocument |> HtmlDocument.location |> Location.reload
+                  );
+             };
+           }
+         | Hidden => ()
+         };
+       });
   };
 
   let drawBall = () => {
@@ -143,30 +154,25 @@ let program = () => {
   };
 
   let drawBricks = () => {
-    for (c in 0 to brickColumnCount - 1) {
-      for (r in 0 to brickRowCount - 1) {
-        switch (bricks[c][r].status) {
-        | Visible =>
-          let brickX = r * (brickWidth + brickPadding) + brickOffsetLeft;
-          let brickY = c * (brickHeight + brickPadding) + brickOffsetTop;
-
-          bricks[c][r].x = brickX;
-          bricks[c][r].y = brickY;
-          Canvas.Canvas2d.beginPath(ctx);
-          Canvas.Canvas2d.rect(
-            ~x=brickX |> float_of_int,
-            ~y=brickY |> float_of_int,
-            ~w=brickWidth |> float_of_int,
-            ~h=brickHeight |> float_of_int,
-            ctx,
-          );
-          fillStyleString(ctx, "#0095DD");
-          Canvas.Canvas2d.fill(ctx);
-          Canvas.Canvas2d.closePath(ctx);
-        | Hidden => ()
-        };
-      };
-    };
+    bricks
+    |> iterBricks(~f=(~c, ~r, ~brick) => {
+         let _ = (c, r);
+         switch (brick.status) {
+         | Visible =>
+           Canvas.Canvas2d.beginPath(ctx);
+           Canvas.Canvas2d.rect(
+             ~x=brick.x |> float_of_int,
+             ~y=brick.y |> float_of_int,
+             ~w=brickWidth |> float_of_int,
+             ~h=brickHeight |> float_of_int,
+             ctx,
+           );
+           fillStyleString(ctx, "#0095DD");
+           Canvas.Canvas2d.fill(ctx);
+           Canvas.Canvas2d.closePath(ctx);
+         | Hidden => ()
+         };
+       });
   };
 
   let drawScore = () => {
