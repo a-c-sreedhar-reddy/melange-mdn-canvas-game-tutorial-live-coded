@@ -1,8 +1,7 @@
 open Webapi;
 open Webapi.Dom;
-
-[@mel.set]
-external fillStyle: (Canvas.Canvas2d.t, string) => unit = "fillStyle";
+let fillStyleString = (ctx, style) =>
+  Canvas.Canvas2d.setFillStyle(ctx, String, style);
 
 type brickStatus =
   | Hidden
@@ -124,7 +123,7 @@ let program = () => {
       ctx,
     );
 
-    fillStyle(ctx, "#0095DD");
+    fillStyleString(ctx, "#0095DD");
     Canvas.Canvas2d.fill(ctx);
     Canvas.Canvas2d.closePath(ctx);
   };
@@ -138,7 +137,7 @@ let program = () => {
       ~h=paddleHeight |> float_of_int,
       ctx,
     );
-    fillStyle(ctx, "#0095DD");
+    fillStyleString(ctx, "#0095DD");
     Canvas.Canvas2d.fill(ctx);
     Canvas.Canvas2d.closePath(ctx);
   };
@@ -161,7 +160,7 @@ let program = () => {
             ~h=brickHeight |> float_of_int,
             ctx,
           );
-          fillStyle(ctx, "#0095DD");
+          fillStyleString(ctx, "#0095DD");
           Canvas.Canvas2d.fill(ctx);
           Canvas.Canvas2d.closePath(ctx);
         | Hidden => ()
@@ -172,7 +171,7 @@ let program = () => {
 
   let drawScore = () => {
     Canvas.Canvas2d.font(ctx, "16px Arial");
-    fillStyle(ctx, "#0095DD");
+    fillStyleString(ctx, "#0095DD");
     Canvas.Canvas2d.fillText(
       "Score: " ++ (score^ |> string_of_int),
       ~x=8.0,
@@ -183,7 +182,7 @@ let program = () => {
 
   let drawLives = () => {
     Canvas.Canvas2d.font(ctx, "16px Arial");
-    fillStyle(ctx, "#0095DD");
+    fillStyleString(ctx, "#0095DD");
     Canvas.Canvas2d.fillText(
       "Lives: " ++ (lives^ |> string_of_int),
       ~x=Canvas.CanvasElement.width(canvas) - 65 |> float_of_int,
