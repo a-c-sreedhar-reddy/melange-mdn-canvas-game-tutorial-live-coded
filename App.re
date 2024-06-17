@@ -4,10 +4,6 @@ open Webapi.Dom;
 [@mel.set]
 external fillStyle: (Canvas.Canvas2d.t, string) => unit = "fillStyle";
 
-module Math = {
-  [@mel.scope "Math"] external pi: float = "PI";
-};
-
 type brickStatus =
   | Hidden
   | Visible;
@@ -103,7 +99,11 @@ let program = () => {
 
             if (score^ === brickRowCount * brickColumnCount) {
               Window.alert("YOU WIN, CONGRATS!", window);
-              Location.reload(location);
+              document
+              |> Document.asHtmlDocument
+              |> Option.iter(htmlDocument =>
+                   htmlDocument |> HtmlDocument.location |> Location.reload
+                 );
             };
           }
         | Hidden => ()
@@ -119,7 +119,7 @@ let program = () => {
       ~y=float_of_int(y^),
       ~r=float_of_int(ballRadius),
       ~startAngle=0.0,
-      ~endAngle=2.0 *. Math.pi,
+      ~endAngle=2.0 *. Js.Math._PI,
       ~anticw=true,
       ctx,
     );
@@ -222,7 +222,11 @@ let program = () => {
         lives := lives^ - 1;
         if (lives^ <= 0) {
           window |> Window.alert("GAME OVER");
-          Location.reload(location);
+          document
+          |> Document.asHtmlDocument
+          |> Option.iter(htmlDocument =>
+               htmlDocument |> HtmlDocument.location |> Location.reload
+             );
         } else {
           x := Canvas.CanvasElement.width(canvas) / 2;
           y := Canvas.CanvasElement.height(canvas) - 30;
